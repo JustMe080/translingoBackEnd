@@ -18,8 +18,9 @@ nlp = spacy.load("en_core_web_sm")
 
 # Hugging Face API details for text simplification
 API_URL1 = "https://api-inference.huggingface.co/models/JexCaber/TransLingo"
-API_URL2 = "https://api-inference.huggingface.co/models/JexCaber/TransLingo-Terms2"
-HEADERS = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_TOKEN')}"}
+API_URL2 = "https://api-inference.huggingface.co/models/JexCaber/TransLingo-Terms"
+HEADERS1 = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_TOKEN1')}"}
+HEADERS2 = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_TOKEN2')}"}
 
 
 
@@ -52,7 +53,7 @@ def extract_terms_from_paragraph(paragraph):
         }
 
         try:
-            response = requests.post(API_URL2, headers=HEADERS, json=generation_params)
+            response = requests.post(API_URL2, headers=HEADERS2, json=generation_params)
             response.raise_for_status()
             output_text = response.json()[0]['generated_text']
 
@@ -104,7 +105,7 @@ def simplify_text(paragraph):
         }
 
         try:
-            response = requests.post(API_URL1, headers=HEADERS, json=generation_params)
+            response = requests.post(API_URL1, headers=HEADERS1, json=generation_params)
             response.raise_for_status()
             simplified_chunk = response.json()[0]['generated_text']
             simplified_output[f"Topic {i+1}"] = simplified_chunk
