@@ -4,8 +4,6 @@ import pandas as pd
 import spacy
 from dotenv import load_dotenv
 from flask_cors import CORS
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-import torch
 import os
 
 # Load environment variables
