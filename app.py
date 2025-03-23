@@ -68,56 +68,9 @@ def extract_terms_from_paragraph(paragraph):
 
     return extracted_terms
 
-def split_by_topics(text):
-    """Splits text into topic-based chunks using Named Entity Recognition (NER)."""
-    doc = nlp(text)
-    topic_chunks = []
-    current_chunk = []
-    current_entities = set()
-
-    for sent in doc.sents:
-        entities = {ent.text.lower() for ent in sent.ents}
-
-        # Start a new topic if entities change significantly
-        if current_entities and len(current_entities.intersection(entities)) < 1:
-            topic_chunks.append(" ".join(current_chunk))
-            current_chunk = []
-            current_entities = entities
-        else:
-            current_entities.update(entities)
-
-        current_chunk.append(sent.text)
-
-    if current_chunk:
-        topic_chunks.append(" ".join(current_chunk))
-
-    return topic_chunks
-
-def simplify_text(paragraph):
-    """Uses Hugging Face API to simplify text based on topic chunks."""
-    topic_chunks = split_by_topics(paragraph)
-    simplified_output = {}
-
-    for i, chunk in enumerate(topic_chunks):
-        generation_params = {
-            "inputs": chunk,
-            "parameters": {"max_length": 150}
-        }
-
-        try:
-            response = requests.post(API_URL1, headers=HEADERS1, json=generation_params)
-            response.raise_for_status()
-            simplified_chunk = response.json()[0]['generated_text']
-            simplified_output[f"Topic {i+1}"] = simplified_chunk
-
-        except requests.exceptions.RequestException as e:
-            return {"error": "Hugging Face API request failed", "details": str(e)}
-
-    return simplified_output
 
 @app.route("/simplify-text", methods=['POST'])
-def api_simplify_text():
-    """API endpoint for text simplification."""
+def simplify_text():
     try:
         data = request.json
         text = data.get('text')
@@ -125,10 +78,27 @@ def api_simplify_text():
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-        simplified_text = simplify_text(text)
-        return jsonify(simplified_text)
+        # Define generation parameters
+        generation_params = {
+            "inputs": text,
+            "parameters": {
+                "max_length": 150
+            }
+        }
 
-    except Exception as e:
+        # Send request to Hugging Face API
+        response = requests.post(API_URL1, headers=HEADERS1, json=generation_params)
+
+        # Log response
+        print("Status Code:", response.status_code)
+        print("Response Text:", response.text)
+
+        response.raise_for_status()
+
+        return jsonify(response.json())
+
+    except requests.exceptions.RequestException as e:
+        print("Request Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route("/term-detection", methods=['POST'])
